@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use bitcoin::secp256k1::XOnlyPublicKey;
 use bitcoind_async_client::traits::{Reader, Signer, Wallet};
 use strata_btc_types::TxidExt;
 use strata_db_types::types::{BundledPayloadEntry, L1TxEntry};
@@ -26,6 +27,7 @@ pub(crate) async fn create_payload_envelopes<R: Reader + Signer + Wallet>(
     payload_idx: u64,
     payloadentry: &BundledPayloadEntry,
     ctx: Arc<WriterContext<R>>,
+    envelope_pubkey: XOnlyPublicKey,
 ) -> Result<EnvelopeData, EnvelopeError> {
     let span = debug_span!(
         "btcio_payload_envelope",
@@ -35,7 +37,8 @@ pub(crate) async fn create_payload_envelopes<R: Reader + Signer + Wallet>(
 
     async {
         trace!("Building payload envelope transactions");
-        let mut envelope = build_envelope_txs(&payloadentry.payload, ctx.as_ref()).await?;
+        let mut envelope =
+            build_envelope_txs(&payloadentry.payload, ctx.as_ref(), envelope_pubkey).await?;
 
         let commit_txid = envelope.commit_tx.compute_txid();
         debug!(%commit_txid, "Signing commit transaction with wallet");
@@ -57,7 +60,7 @@ pub(crate) async fn create_payload_envelopes<R: Reader + Signer + Wallet>(
 /// Builds envelope transactions, signs both in-process with a temporary keypair, and stores
 /// them in the broadcaster DB.
 ///
-/// Used when `CredRule::Unchecked` is configured — no external signer is needed.
+/// Used when no external signer is required.
 /// Returns `(commit_txid, reveal_txid)`.
 pub(crate) async fn sign_and_broadcast_payload_envelopes<R: Reader + Signer + Wallet>(
     payload_idx: u64,
@@ -152,7 +155,10 @@ mod test {
     use super::*;
     use crate::{
         test_utils::test_context::get_writer_context,
-        writer::test_utils::{get_broadcast_handle, get_envelope_ops},
+        writer::{
+            test_utils::{get_broadcast_handle, get_envelope_ops},
+            EnvelopeSigningMode,
+        },
     };
 
     #[tokio::test(flavor = "multi_thread")]
@@ -174,7 +180,12 @@ mod test {
             .await
             .unwrap();
 
-        let envelope = create_payload_envelopes(0, &entry, ctx).await.unwrap();
+        let EnvelopeSigningMode::External { pubkey } = ctx.signing_mode().unwrap() else {
+            panic!("test writer context must use external signing");
+        };
+        let envelope = create_payload_envelopes(0, &entry, ctx, pubkey)
+            .await
+            .unwrap();
 
         // Commit tx should not be in broadcast DB yet — deferred until reveal sig arrives
         let cid: Buf32 = envelope.commit_tx.compute_txid().to_buf32();
