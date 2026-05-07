@@ -86,12 +86,22 @@ class TestEePredicateFullnodeSync(BaseTest):
         alpen_seq.wait_for_block(historical_target, timeout=120)
         ee_fullnode_0.wait_for_block(historical_target, timeout=120)
         historical_hash = ee_fullnode_0.get_block_by_number(historical_target)["hash"]
+        late_join_start_height = alpen_seq.get_block_number()
+        if historical_target > late_join_start_height:
+            raise AssertionError(
+                f"historical replay target {historical_target} is after late-join height "
+                f"{late_join_start_height}"
+            )
+        late_join_start_hash = ee_fullnode_0.get_block_by_number(late_join_start_height)["hash"]
 
         _, sequencer_pubkey = generate_sequencer_keypair()
         factory = AlpenClientFactory(range(30700, 30800))
         fn0_enode = ee_fullnode_0.get_enode()
 
         tmpdir = tempfile.mkdtemp(prefix="alpen_fullnode_after_vk_rotation_")
+        if any(Path(tmpdir).iterdir()):
+            raise AssertionError(f"late fullnode datadir is not empty before startup: {tmpdir}")
+
         ee_fullnode_1 = None
         try:
             ee_fullnode_1 = factory.create_fullnode(
@@ -111,6 +121,11 @@ class TestEePredicateFullnodeSync(BaseTest):
 
             ee_fullnode_1.wait_for_peers(1, timeout=30)
             ee_fullnode_1.wait_for_block_hash(historical_target, historical_hash, timeout=120)
+            ee_fullnode_1.wait_for_block_hash(
+                late_join_start_height,
+                late_join_start_hash,
+                timeout=120,
+            )
 
             fresh_target = historical_target + FRESH_EE_BLOCKS_AFTER_LATE_JOIN
             alpen_seq.wait_for_block(fresh_target, timeout=120)
@@ -119,7 +134,8 @@ class TestEePredicateFullnodeSync(BaseTest):
             ee_fullnode_1.wait_for_block_hash(fresh_target, fresh_hash, timeout=120)
 
             logger.info(
-                "late EE fullnode synced historical block %s and fresh block %s after VK rotation",
+                "fresh EE fullnode replayed through late-join block %s "
+                "and synced fresh block %s after VK rotation",
                 historical_target,
                 fresh_target,
             )

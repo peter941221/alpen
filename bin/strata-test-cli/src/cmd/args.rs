@@ -1,13 +1,18 @@
 use argh::FromArgs;
 
 use super::{
-    build_snark_withdrawal::BuildSnarkWithdrawalArgs, convert_to_xonly_pk::ConvertToXonlyPkArgs,
+    build_snark_withdrawal::BuildSnarkWithdrawalArgs,
+    convert_to_xonly_pk::ConvertToXonlyPkArgs,
     create_deposit_tx::CreateDepositTxArgs,
-    create_ee_predicate_update::CreateEePredicateUpdateArgs,
+    create_ee_predicate_update::{
+        CreateCheckpointPredicateUpdateArgs, CreateEePredicateUpdateArgs,
+    },
     create_mock_deposit::CreateMockDepositArgs,
     create_withdrawal_fulfillment::CreateWithdrawalFulfillmentArgs,
-    extract_p2tr_pubkey::ExtractP2trPubkeyArgs, get_address::GetAddressArgs,
-    musig_aggregate_pks::MusigAggregatePksArgs, sign_schnorr_sig::SignSchnorrSigArgs,
+    extract_p2tr_pubkey::ExtractP2trPubkeyArgs,
+    get_address::GetAddressArgs,
+    musig_aggregate_pks::MusigAggregatePksArgs,
+    sign_schnorr_sig::SignSchnorrSigArgs,
     xonlypk_to_descriptor::XonlypkToDescriptorArgs,
 };
 
@@ -35,6 +40,9 @@ pub enum Commands {
 
     /// Queue an admin update that changes the EE account predicate key
     CreateEePredicateUpdate(CreateEePredicateUpdateArgs),
+
+    /// Queue an admin update that changes the OL checkpoint predicate key
+    CreateCheckpointPredicateUpdate(CreateCheckpointPredicateUpdateArgs),
 
     /// Build a snark account withdrawal transaction JSON
     BuildSnarkWithdrawal(BuildSnarkWithdrawalArgs),

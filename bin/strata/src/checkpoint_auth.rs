@@ -25,7 +25,6 @@ impl fmt::Debug for CheckpointSequencerKeyProvider {
 }
 
 impl CheckpointSequencerKeyProvider {
-    /// Creates a provider backed by node storage.
     pub(crate) fn new(storage: Arc<NodeStorage>) -> Self {
         Self { storage }
     }

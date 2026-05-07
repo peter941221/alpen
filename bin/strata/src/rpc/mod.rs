@@ -88,7 +88,6 @@ impl SeqRpcDeps {
         &self.blockasm_handle
     }
 
-    /// Returns the current sequencer key provider.
     fn sequencer_key_provider(&self) -> CheckpointSequencerKeyProvider {
         self.sequencer_key_provider.clone()
     }
