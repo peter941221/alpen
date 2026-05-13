@@ -581,6 +581,7 @@ fn main() {
                     let fee_bumper_context = FeeBumperContext {
                         chunked_ops: Some(envelope_ops.clone()),
                         sequencer_keypair: Some(fee_bumper_sequencer_keypair),
+                        ..FeeBumperContext::default()
                     };
                     node.task_executor
                         .spawn_critical("btcio_fee_bumper", async move {

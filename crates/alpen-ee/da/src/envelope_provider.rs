@@ -13,7 +13,7 @@ use eyre::{bail, ensure};
 use strata_btc_types::Buf32BitcoinExt;
 use strata_btcio::writer::chunked_envelope::ChunkedEnvelopeHandle;
 use strata_db_types::types::{
-    ChunkedEnvelopeEntry, ChunkedEnvelopeStatus, L1TxId, L1TxStatus, L1WtxId,
+    ChunkedEnvelopeEntry, ChunkedEnvelopeStatus, L1BlockHash, L1TxId, L1TxStatus, L1WtxId,
 };
 use strata_identifiers::{L1BlockCommitment, L1BlockId, L1Height};
 use strata_l1_txfmt::MagicBytes;
@@ -52,7 +52,7 @@ struct FinalizedRevealTx {
 }
 
 /// Groups commit + reveal txs by L1 block for [`L1DaBlockRef`] construction.
-type BlockMap = HashMap<(Buf32, L1Height), BlockTxs>;
+type BlockMap = HashMap<(L1BlockHash, L1Height), BlockTxs>;
 
 fn to_raw_buf32(txid: L1TxId) -> Buf32 {
     Buf32(txid.0)
@@ -240,7 +240,7 @@ impl ChunkedEnvelopeDaProvider {
     }
 
     /// Looks up a tx in the broadcast DB and returns the finalized L1 block.
-    async fn lookup_finalized(&self, txid: L1TxId) -> eyre::Result<(Buf32, L1Height)> {
+    async fn lookup_finalized(&self, txid: L1TxId) -> eyre::Result<(L1BlockHash, L1Height)> {
         let Some(tx_entry) = self
             .broadcast_ops
             .get_tx_entry_by_id_async(to_raw_buf32(txid))
@@ -374,7 +374,7 @@ mod tests {
         let mut entry = L1TxEntry::from_tx(&make_test_tx());
         entry.status = L1TxStatus::Finalized {
             confirmations: 6,
-            block_hash: Buf32::from([height as u8; 32]),
+            block_hash: L1BlockHash::from([height as u8; 32]),
             block_height: height,
         };
         entry
