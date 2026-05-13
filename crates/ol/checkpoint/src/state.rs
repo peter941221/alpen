@@ -192,6 +192,7 @@ mod tests {
     use strata_asm_proto_checkpoint_types::{
         CheckpointPayload, CheckpointTip, test_utils::checkpoint_sidecar_strategy,
     };
+    use strata_bridge_params::BridgeParams;
     use strata_checkpoint_types::EpochSummary;
     use strata_db_store_sled::test_utils::get_test_sled_backend;
     use strata_identifiers::{
@@ -240,7 +241,7 @@ mod tests {
             stub_ol_logs: Vec<OLLog>,
         ) -> Self {
             Self {
-                inner: CheckpointWorkerContextImpl::new(storage),
+                inner: CheckpointWorkerContextImpl::new(storage, BridgeParams::default()),
                 stub_state_diff,
                 stub_ol_logs,
             }
@@ -366,7 +367,7 @@ mod tests {
                     .expect("put checkpoint");
             }
 
-            let ctx = CheckpointWorkerContextImpl::new(storage);
+            let ctx = CheckpointWorkerContextImpl::new(storage, BridgeParams::default());
             let mut state = OLCheckpointServiceState::new(ctx);
             state.initialize();
 

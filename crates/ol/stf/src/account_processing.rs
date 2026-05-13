@@ -132,16 +132,12 @@ fn handle_bridge_gateway_message<S: IStateAccessorMut>(
         return Ok(());
     };
 
-    // 2. Check if the withdrawal amount is a positive exact multiple of the denomination
-    let withdrawal_amt = payload.value();
-
-    // TODO(STR-2974) move to params struct
-    let withdrawal_denom: u64 = 100_000_000;
-
-    // 3. Verify the amount is a positive exact multiple of the denomination.
-    let amt_raw: u64 = withdrawal_amt.into();
-    if amt_raw == 0 || !amt_raw.is_multiple_of(withdrawal_denom) {
-        // Sweep to limbo.
+    // 2. Validate the withdrawal amount against params.
+    let amt_raw: u64 = payload.value().into();
+    let valid = context
+        .bridge_params()
+        .is_some_and(|wp| wp.validate_withdrawal_amount(amt_raw));
+    if !valid {
         warn!(%sender, %amt_raw, "limboing bad amount sent to bridge gateway acct");
         handle_misplaced_funds(state, coin)?;
         return Ok(());
@@ -149,7 +145,7 @@ fn handle_bridge_gateway_message<S: IStateAccessorMut>(
 
     // 4. If it is, then we can emit a OL log with the amount and destination.
     let log_data = SimpleWithdrawalIntentLogData {
-        amt: withdrawal_amt.into(),
+        amt: payload.value().into(),
         selected_operator: withdrawal_data.selected_operator(),
         dest: withdrawal_data.into_dest_desc(),
     };

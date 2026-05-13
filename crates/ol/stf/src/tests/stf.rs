@@ -2,6 +2,7 @@
 
 use strata_acct_types::{AccountId, BitcoinAmount};
 use strata_asm_common::AsmManifest;
+use strata_bridge_params::BridgeParams;
 use strata_identifiers::{Buf32, L1BlockId, WtxidsRoot};
 use strata_ledger_types::*;
 use strata_ol_chain_types_new::*;
@@ -1158,8 +1159,14 @@ fn test_verify_block_through_write_tracking_stack() {
         let tracking = WriteTrackingState::new_empty(&verify_base);
         let mut indexer = IndexerState::new(tracking);
 
-        verify_block(&mut indexer, genesis.header(), None, genesis.body())
-            .expect("Genesis verification through write-tracking stack should succeed");
+        verify_block(
+            &mut indexer,
+            genesis.header(),
+            None,
+            genesis.body(),
+            BridgeParams::default(),
+        )
+        .expect("Genesis verification through write-tracking stack should succeed");
 
         let (tracking, _writes) = indexer.into_parts();
         verify_base
@@ -1177,6 +1184,7 @@ fn test_verify_block_through_write_tracking_stack() {
             block1.header(),
             Some(genesis.header()),
             block1.body(),
+            BridgeParams::default(),
         )
         .expect("Block 1 verification through write-tracking stack should succeed");
     }
@@ -1215,7 +1223,7 @@ fn test_verify_terminal_block_through_write_tracking_stack() {
         let tracking = WriteTrackingState::new_empty(&verify_base);
         let mut indexer = IndexerState::new(tracking);
 
-        verify_block(&mut indexer, block.header(), parent_header.as_ref(), block.body()).unwrap_or_else(
+        verify_block(&mut indexer, block.header(), parent_header.as_ref(), block.body(), BridgeParams::default()).unwrap_or_else(
             |e| {
                 panic!(
                     "Block {} (slot {}, terminal={}) verification through write-tracking stack failed: {:?}",
