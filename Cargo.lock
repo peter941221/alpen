@@ -1046,6 +1046,7 @@ dependencies = [
  "shrex",
  "sled",
  "strata-asm-proto-bridge-v1-txs",
+ "strata-bridge-params",
  "strata-cli-common",
  "strata-identifiers",
  "strata-l1-txfmt",
@@ -1105,6 +1106,7 @@ dependencies = [
  "rsp-primitives",
  "ssz",
  "strata-acct-types",
+ "strata-bridge-params",
  "strata-btcio",
  "strata-codec",
  "strata-common",
@@ -1416,6 +1418,7 @@ dependencies = [
  "revm",
  "revm-primitives",
  "secp256k1 0.29.1",
+ "strata-bridge-params",
  "strata-crypto",
  "strata-identifiers",
  "strata-ol-bridge-types",
@@ -15048,6 +15051,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "strata-bridge-params"
+version = "0.1.0"
+dependencies = [
+ "arbitrary",
+ "serde",
+ "ssz",
+ "ssz_derive",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "strata-btc-types"
 version = "0.1.0"
 source = "git+https://github.com/alpenlabs/strata-common?tag=v0.1.0-alpha-rc21#bb060d613880d8d4c8decd0e7544acb54e4d5a25"
@@ -15152,6 +15166,7 @@ dependencies = [
  "sled",
  "ssz",
  "strata-acct-types",
+ "strata-bridge-params",
  "strata-checkpoint-types",
  "strata-db-store-sled",
  "strata-db-types",
@@ -15909,6 +15924,7 @@ dependencies = [
  "strata-asm-common",
  "strata-asm-manifest-types",
  "strata-asm-proto-checkpoint-types",
+ "strata-bridge-params",
  "strata-btc-verification",
  "strata-codec",
  "strata-common",
@@ -16021,6 +16037,7 @@ dependencies = [
  "proptest",
  "serde",
  "strata-asm-proto-checkpoint-types",
+ "strata-bridge-params",
  "strata-checkpoint-types",
  "strata-db-store-sled",
  "strata-identifiers",
@@ -16132,6 +16149,7 @@ dependencies = [
  "arbitrary",
  "serde",
  "serde_json",
+ "strata-bridge-params",
  "strata-btc-types",
  "strata-identifiers",
  "strata-predicate",
@@ -16281,6 +16299,7 @@ dependencies = [
  "strata-acct-types",
  "strata-asm-common",
  "strata-asm-logs",
+ "strata-bridge-params",
  "strata-codec",
  "strata-identifiers",
  "strata-ledger-types",
@@ -16388,11 +16407,13 @@ dependencies = [
 name = "strata-proofimpl-alpen-acct"
 version = "0.1.0"
 dependencies = [
+ "alpen-reth-evm",
  "reth-chainspec",
  "rkyv",
  "rsp-primitives",
  "ssz",
  "strata-acct-types",
+ "strata-bridge-params",
  "strata-codec",
  "strata-ee-acct-runtime",
  "strata-ee-acct-types",
@@ -16409,6 +16430,7 @@ dependencies = [
 name = "strata-proofimpl-alpen-chunk"
 version = "0.1.0"
 dependencies = [
+ "alpen-reth-evm",
  "reth-chainspec",
  "reth-primitives-traits",
  "rkyv",
@@ -16418,6 +16440,7 @@ dependencies = [
  "serde_json",
  "ssz",
  "strata-acct-types",
+ "strata-bridge-params",
  "strata-codec",
  "strata-ee-acct-types",
  "strata-ee-chain-types",
@@ -16435,6 +16458,7 @@ dependencies = [
  "ssz_primitives",
  "strata-asm-manifest-types",
  "strata-asm-proto-checkpoint-types",
+ "strata-bridge-params",
  "strata-codec",
  "strata-crypto",
  "strata-da-framework",
@@ -16495,6 +16519,7 @@ dependencies = [
 name = "strata-provers-perf"
 version = "0.3.0-alpha.1"
 dependencies = [
+ "alpen-reth-evm",
  "anyhow",
  "argh",
  "num-format",
@@ -16507,6 +16532,7 @@ dependencies = [
  "sp1-sdk",
  "ssz",
  "strata-acct-types",
+ "strata-bridge-params",
  "strata-codec",
  "strata-da-framework",
  "strata-ee-acct-runtime",
