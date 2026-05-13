@@ -1,6 +1,7 @@
 use rkyv::rancor::Error as RkyvError;
 use rsp_primitives::genesis::Genesis;
-use ssz::Decode;
+use ssz::{Decode, Encode};
+use strata_bridge_params::BridgeParams;
 use strata_ee_chain_types::ChunkTransition;
 use strata_ee_chunk_runtime::PrivateInput;
 use zkaleido::{
@@ -15,6 +16,7 @@ use crate::process_ee_chunk;
 pub struct EeChunkProofInput {
     pub genesis: Genesis,
     pub private_input: PrivateInput,
+    pub bridge_params: BridgeParams,
 }
 
 #[derive(Debug)]
@@ -41,6 +43,7 @@ impl ZkVmProgram for EeChunkProgram {
         let rkyv_bytes = rkyv::to_bytes::<RkyvError>(&input.private_input)
             .map_err(|e| ZkVmInputError::InputBuild(e.to_string()))?;
         builder.write_buf(&rkyv_bytes)?;
+        builder.write_buf(&input.bridge_params.as_ssz_bytes())?;
         builder.build()
     }
 
@@ -72,6 +75,7 @@ impl EeChunkProgram {
 mod tests {
     use std::{fs, path::PathBuf, sync::Arc};
 
+    use alpen_reth_evm::evm::AlpenEvmFactory;
     use reth_primitives_traits::Block as _;
     use rsp_client_executor::io::EthClientExecutorInput;
     use serde::Deserialize;
@@ -129,7 +133,7 @@ mod tests {
         // Execute the block to get outputs.
         let chain_spec: Arc<reth_chainspec::ChainSpec> =
             Arc::new((&witness.genesis).try_into().unwrap());
-        let ee = EvmExecutionEnvironment::new(chain_spec);
+        let ee = EvmExecutionEnvironment::new(chain_spec, AlpenEvmFactory::default());
         let exec_payload = ExecPayload::new(&header, block.get_body());
         let inputs = ExecInputs::new_empty();
         let output = ee
@@ -159,6 +163,7 @@ mod tests {
         let proof_input = EeChunkProofInput {
             genesis: witness.genesis,
             private_input,
+            bridge_params: BridgeParams::default(),
         };
 
         // Run the full native execution pipeline.

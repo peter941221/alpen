@@ -16,6 +16,7 @@ use async_trait::async_trait;
 use reth_primitives_traits::Block as _;
 use rsp_primitives::genesis::Genesis;
 use strata_acct_types::Hash;
+use strata_bridge_params::BridgeParams;
 use strata_codec::encode_to_vec;
 use strata_ee_acct_types::{ExecBlock, ExecHeader};
 use strata_ee_chain_types::{
@@ -116,6 +117,7 @@ pub(crate) struct ChunkSpec {
     storage: Arc<EeNodeStorage>,
     genesis: Genesis,
     range_witness_fn: Arc<RangeWitnessFn>,
+    bridge_params: BridgeParams,
 }
 
 impl ChunkSpec {
@@ -124,12 +126,14 @@ impl ChunkSpec {
         storage: Arc<EeNodeStorage>,
         genesis: Genesis,
         range_witness_fn: Arc<RangeWitnessFn>,
+        bridge_params: BridgeParams,
     ) -> Self {
         Self {
             batch_storage,
             storage,
             genesis,
             range_witness_fn,
+            bridge_params,
         }
     }
 }
@@ -248,6 +252,7 @@ impl ProofSpec for ChunkSpec {
         Ok(EeChunkProofInput {
             genesis: self.genesis.clone(),
             private_input,
+            bridge_params: self.bridge_params,
         })
     }
 }

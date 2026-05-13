@@ -13,6 +13,7 @@
 
 use ssz::Encode;
 use strata_acct_types::BitcoinAmount;
+use strata_bridge_params::BridgeParams;
 use strata_codec::encode_to_vec;
 use strata_ee_acct_runtime::{ChunkInput, EePrivateInput};
 use strata_ee_acct_types::{EeAccountState, ExecBlock, ExecHeader, UpdateExtraData};
@@ -97,6 +98,7 @@ fn prepare_input() -> EeAcctProofInput {
         genesis,
         ee_private_input,
         update_private_input,
+        bridge_params: BridgeParams::default(),
     }
 }
 
