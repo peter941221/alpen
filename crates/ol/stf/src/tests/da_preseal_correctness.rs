@@ -5,6 +5,7 @@
 use strata_acct_types::BitcoinAmount;
 use strata_asm_common::{AsmLogEntry, AsmManifest};
 use strata_asm_logs::DepositLog;
+use strata_bridge_params::BridgeParams;
 use strata_codec::{VarVec, decode_buf_exact};
 use strata_identifiers::{
     AccountSerial, Buf32, Buf64, OLBlockCommitment, SubjectId, SubjectIdBytes, WtxidsRoot,
@@ -168,8 +169,13 @@ fn rebuild_da_blob(
     prev_terminal_header: &OLBlockHeader,
 ) -> Vec<u8> {
     let mut da = DaAccumulatingState::new(pre_epoch_state.clone());
-    execute_block_batch_preseal(&mut da, blocks, prev_terminal_header)
-        .expect("execute_block_batch_preseal");
+    execute_block_batch_preseal(
+        &mut da,
+        blocks,
+        prev_terminal_header,
+        BridgeParams::default(),
+    )
+    .expect("execute_block_batch_preseal");
     da.take_completed_epoch_da_blob()
         .expect("finalize DA")
         .expect("DA blob")
