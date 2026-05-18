@@ -1,15 +1,21 @@
+use k256::schnorr::SigningKey;
 use rkyv::rancor::Error as RkyvError;
 use rsp_primitives::genesis::Genesis;
 use ssz::{Decode, Encode};
 use strata_bridge_params::BridgeParams;
 use strata_ee_chain_types::ChunkTransition;
 use strata_ee_chunk_runtime::PrivateInput;
+use strata_predicate::{PredicateKey, PredicateTypeId};
 use zkaleido::{
     ProofType, PublicValues, ZkVmError, ZkVmInputError, ZkVmInputResult, ZkVmProgram, ZkVmResult,
 };
 use zkaleido_native_adapter::NativeHost;
 
 use crate::process_ee_chunk;
+
+fn test_signing_key() -> SigningKey {
+    SigningKey::from_bytes(&[0x03u8; 32]).expect("valid test signing key")
+}
 
 /// Host-side input for the EE chunk proof.
 #[derive(Debug)]
@@ -58,7 +64,14 @@ impl ZkVmProgram for EeChunkProgram {
 
 impl EeChunkProgram {
     pub fn native_host() -> NativeHost {
-        NativeHost::new_with_random_key(process_ee_chunk)
+        NativeHost::new(test_signing_key(), process_ee_chunk)
+    }
+
+    /// Predicate key matching the signing key the native host uses, for wiring into
+    /// functional-test params so the resulting witness verifies under `Bip340Schnorr`.
+    pub fn test_predicate_key() -> PredicateKey {
+        let pk = test_signing_key().verifying_key().to_bytes().to_vec();
+        PredicateKey::new(PredicateTypeId::Bip340Schnorr, pk)
     }
 
     /// Executes the chunk proof program using the native host for testing.
