@@ -19,10 +19,15 @@ BITCOIND_RPC_URL="${BITCOIND_RPC_URL:?BITCOIND_RPC_URL must be set}"
 BITCOIND_RPC_USER="${BITCOIND_RPC_USER:?BITCOIND_RPC_USER must be set}"
 BITCOIND_RPC_PASSWORD="${BITCOIND_RPC_PASSWORD:?BITCOIND_RPC_PASSWORD must be set}"
 
+if [ "${DUMMY_OL_CLIENT:-0}" = "1" ]; then
+    set -- --dummy-ol-client "$@"
+else
+    set -- --ol-client-url "${OL_CLIENT_URL:-ws://strata:8432}" "$@"
+fi
+
 exec alpen-client \
     --sequencer \
     --sequencer-pubkey "${SEQUENCER_PUBKEY}" \
-    --ol-client-url "${OL_CLIENT_URL:-ws://strata:8432}" \
     --custom-chain "${CHAIN_SPEC}" \
     --datadir "${DATADIR:-/app/data}" \
     --addr 0.0.0.0 \
