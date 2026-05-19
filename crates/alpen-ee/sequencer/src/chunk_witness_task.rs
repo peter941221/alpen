@@ -26,7 +26,7 @@
 
 use std::{sync::Arc, time::Duration};
 
-use alpen_ee_common::{BatchStorage, ChunkId, ChunkWitnessExtractFn, ChunkWitnessStore};
+use alpen_ee_common::{ChunkId, ChunkStorage, ChunkWitnessExtractFn, ChunkWitnessStore};
 use eyre::{eyre, Result};
 use strata_acct_types::Hash;
 use tokio::{sync::mpsc, task, time};
@@ -168,11 +168,11 @@ async fn process_request(
 /// channel backpressure naturally throttles a large backlog instead of
 /// flooding the in-memory queue.
 pub async fn backfill_missing_chunk_witnesses(
-    batch_storage: &dyn BatchStorage,
+    chunk_storage: &dyn ChunkStorage,
     witness_store: &dyn ChunkWitnessStore,
     tx: &mpsc::Sender<ChunkExtractRequest>,
 ) -> Result<usize> {
-    let Some((latest, _)) = batch_storage
+    let Some((latest, _)) = chunk_storage
         .get_latest_chunk()
         .await
         .map_err(|e| eyre!("get_latest_chunk: {e}"))?
@@ -184,7 +184,7 @@ pub async fn backfill_missing_chunk_witnesses(
     let latest_idx = latest.idx();
     let mut sent = 0usize;
     for idx in 0..=latest_idx {
-        let Some((chunk, _)) = batch_storage
+        let Some((chunk, _)) = chunk_storage
             .get_chunk_by_idx(idx)
             .await
             .map_err(|e| eyre!("get_chunk_by_idx({idx}): {e}"))?

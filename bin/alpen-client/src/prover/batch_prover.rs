@@ -12,7 +12,7 @@
 
 use std::sync::Arc;
 
-use alpen_ee_common::{BatchId, BatchProver, BatchStorage, Proof, ProofGenerationStatus, ProofId};
+use alpen_ee_common::{BatchId, BatchProver, ChunkStorage, Proof, ProofGenerationStatus, ProofId};
 use async_trait::async_trait;
 use strata_paas::{ProverError as PaasError, ProverHandle, TaskStatus};
 use tracing::{debug, info, warn};
@@ -25,7 +25,7 @@ use super::{
 pub(crate) struct PaasBatchProver {
     chunk_handle: ProverHandle<ChunkSpec>,
     acct_handle: ProverHandle<AcctSpec>,
-    batch_storage: Arc<dyn BatchStorage>,
+    chunk_storage: Arc<dyn ChunkStorage>,
     batch_proofs: Arc<EeBatchProofDbManager>,
 }
 
@@ -33,13 +33,13 @@ impl PaasBatchProver {
     pub(crate) fn new(
         chunk_handle: ProverHandle<ChunkSpec>,
         acct_handle: ProverHandle<AcctSpec>,
-        batch_storage: Arc<dyn BatchStorage>,
+        chunk_storage: Arc<dyn ChunkStorage>,
         batch_proofs: Arc<EeBatchProofDbManager>,
     ) -> Self {
         Self {
             chunk_handle,
             acct_handle,
-            batch_storage,
+            chunk_storage,
             batch_proofs,
         }
     }
@@ -49,7 +49,7 @@ impl PaasBatchProver {
 impl BatchProver for PaasBatchProver {
     async fn request_proof_generation(&self, batch_id: BatchId) -> eyre::Result<()> {
         let chunks = self
-            .batch_storage
+            .chunk_storage
             .get_batch_chunks(batch_id)
             .await?
             .ok_or_else(|| eyre::eyre!("no chunks set for batch {batch_id}"))?;
