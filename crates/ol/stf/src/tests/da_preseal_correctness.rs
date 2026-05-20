@@ -7,11 +7,11 @@ use strata_asm_common::{AsmLogEntry, AsmManifest};
 use strata_asm_logs::DepositLog;
 use strata_codec::{VarVec, decode_buf_exact};
 use strata_identifiers::{
-    AccountSerial, Buf32, Buf64, OLBlockCommitment, SubjectId, SubjectIdBytes, WtxidsRoot,
+    AccountSerial, Buf32, OLBlockCommitment, SubjectId, SubjectIdBytes, WtxidsRoot,
 };
 use strata_ledger_types::{IStateAccessor, IStateAccessorMut, NewAccountData, NewAccountTypeState};
 use strata_ol_bridge_types::DepositDescriptor;
-use strata_ol_chain_types_new::{L1BlockId, OLBlock, OLBlockHeader, SignedOLBlockHeader};
+use strata_ol_chain_types_new::{L1BlockId, OLBlock, OLBlockHeader};
 use strata_ol_da::{OLDaPayloadV1, OLDaSchemeV1};
 use strata_ol_state_support_types::{DaAccumulatingState, MemoryStateBaseLayer};
 use strata_predicate::PredicateKey;
@@ -22,7 +22,7 @@ use crate::{
     execute_block_batch_preseal,
     test_utils::{
         create_test_genesis_state, execute_block, get_test_snark_account_id, get_test_state_root,
-        test_l1_block_id,
+        test_l1_block_id, to_ol_block,
     },
     verification::verify_epoch_preseal_with_diff,
 };
@@ -210,11 +210,4 @@ fn malformed_deposit_manifest(height: u32) -> AsmManifest {
         vec![log_entry],
     )
     .unwrap()
-}
-
-fn to_ol_block(cb: &CompletedBlock) -> OLBlock {
-    OLBlock::new(
-        SignedOLBlockHeader::new(cb.header().clone(), Buf64::zero()),
-        cb.body().clone(),
-    )
 }

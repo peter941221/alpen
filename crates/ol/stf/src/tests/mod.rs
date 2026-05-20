@@ -32,3 +32,6 @@ mod limbo;
 
 #[cfg(test)]
 mod da_preseal_correctness;
+
+#[cfg(test)]
+mod da_epoch_reconstruction;

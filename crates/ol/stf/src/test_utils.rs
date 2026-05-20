@@ -13,7 +13,7 @@ use strata_acct_types::{
 use strata_asm_common::AsmManifest;
 use strata_codec::{Codec, decode_buf_exact};
 use strata_identifiers::{
-    AccountSerial, Buf32, Epoch, L1BlockCommitment, L1BlockId, Slot, WtxidsRoot,
+    AccountSerial, Buf32, Buf64, Epoch, L1BlockCommitment, L1BlockId, Slot, WtxidsRoot,
 };
 use strata_ledger_types::*;
 use strata_merkle::{CompactMmr64, MerkleProof, Mmr};
@@ -646,6 +646,14 @@ pub fn make_gam_tx(dest: AccountId) -> OLTransaction {
     OLTransaction::new(
         OLTransactionData::new_gam(dest, vec![]),
         TxProofs::new_empty(),
+    )
+}
+
+/// Wraps a [`CompletedBlock`] into an [`OLBlock`] with a zero signature.
+pub fn to_ol_block(cb: &CompletedBlock) -> OLBlock {
+    OLBlock::new(
+        SignedOLBlockHeader::new(cb.header().clone(), Buf64::zero()),
+        cb.body().clone(),
     )
 }
 
