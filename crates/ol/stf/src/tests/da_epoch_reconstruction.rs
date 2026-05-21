@@ -5,30 +5,27 @@
 //! combined. Each test builds a multi-block epoch with empty filler blocks
 //! around the meaningful ones.
 
-use strata_acct_types::{BitcoinAmount, MessageEntry, MsgPayload};
-use strata_asm_common::{AsmLogEntry, AsmManifest};
-use strata_asm_logs::DepositLog;
+use strata_acct_types::{BitcoinAmount, MessageEntry};
+use strata_asm_common::AsmManifest;
 use strata_codec::decode_buf_exact;
-use strata_identifiers::{
-    AccountSerial, Buf32, OLBlockCommitment, SubjectId, SubjectIdBytes, WtxidsRoot,
-};
+use strata_identifiers::{AccountSerial, Buf32, OLBlockCommitment};
 use strata_ledger_types::{IStateAccessor, IStateAccessorMut, NewAccountData, NewAccountTypeState};
-use strata_ol_bridge_types::DepositDescriptor;
 use strata_ol_chain_types_new::{
-    L1BlockId, OLBlock, OLBlockHeader, OLTransaction, OLTransactionData, TxProofs,
+    OLBlock, OLBlockHeader, OLTransaction, OLTransactionData, TxProofs,
 };
 use strata_ol_da::{OLDaPayloadV1, OLDaSchemeV1};
 use strata_ol_state_support_types::{DaAccumulatingState, MemoryStateBaseLayer};
 use strata_predicate::PredicateKey;
 
 use crate::{
-    BlockInfo, EpochInfo, SEQUENCER_ACCT_ID, apply_da_epoch,
+    BlockInfo, EpochInfo, apply_da_epoch,
     assembly::{BlockComponents, CompletedBlock},
     execute_block_batch_preseal,
     test_utils::{
         InboxMmrTracker, SnarkUpdateBuilder, create_empty_account, create_test_genesis_state,
-        execute_block, get_snark_state_expect, get_test_recipient_account_id,
-        get_test_snark_account_id, get_test_state_root, test_l1_block_id, to_ol_block,
+        deposit_manifest, empty_manifest, execute_block, get_snark_state_expect,
+        get_test_recipient_account_id, get_test_snark_account_id, get_test_state_root,
+        snark_inbox_msg, to_ol_block,
     },
 };
 
@@ -319,41 +316,7 @@ fn assert_reconstruction_matches(
     );
 }
 
-/// The inbox message a GAM block delivers and the snark update consumes.
-fn snark_inbox_msg() -> MessageEntry {
-    MessageEntry::new(
-        SEQUENCER_ACCT_ID,
-        1,
-        MsgPayload::new(BitcoinAmount::from_sat(0), b"inbox msg".to_vec()),
-    )
-}
-
 /// Wraps a single transaction into block components.
 fn txs_components(tx: OLTransaction) -> BlockComponents {
     BlockComponents::new_txs_from_ol_transactions(vec![tx])
-}
-
-fn empty_manifest(height: u32) -> AsmManifest {
-    AsmManifest::new(
-        height,
-        L1BlockId::from(Buf32::zero()),
-        WtxidsRoot::from(Buf32::zero()),
-        vec![],
-    )
-    .expect("manifest")
-}
-
-fn deposit_manifest(height: u32, target_serial: AccountSerial) -> AsmManifest {
-    let dest = SubjectIdBytes::try_new(SubjectId::from([42u8; 32]).inner().to_vec()).unwrap();
-    let descriptor = DepositDescriptor::new(target_serial, dest).unwrap();
-    let log_entry =
-        AsmLogEntry::from_log(&DepositLog::new(descriptor.encode_to_varvec(), 150_000_000))
-            .unwrap();
-    AsmManifest::new(
-        height,
-        test_l1_block_id(1),
-        WtxidsRoot::from(Buf32::zero()),
-        vec![log_entry],
-    )
-    .unwrap()
 }

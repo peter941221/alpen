@@ -10,13 +10,16 @@ use strata_acct_types::{
     AccountId, AccumulatorClaim, BitcoinAmount, Hash, MessageEntry, Mmr64, MsgPayload,
     RawMerkleProof, SentMessage, SentTransfer, StrataHasher, TxEffects, tree_hash::TreeHash,
 };
-use strata_asm_common::AsmManifest;
+use strata_asm_common::{AsmLogEntry, AsmManifest};
+use strata_asm_logs::DepositLog;
 use strata_codec::{Codec, decode_buf_exact};
 use strata_identifiers::{
-    AccountSerial, Buf32, Buf64, Epoch, L1BlockCommitment, L1BlockId, Slot, WtxidsRoot,
+    AccountSerial, Buf32, Buf64, Epoch, L1BlockCommitment, L1BlockId, Slot, SubjectId,
+    SubjectIdBytes, WtxidsRoot,
 };
 use strata_ledger_types::*;
 use strata_merkle::{CompactMmr64, MerkleProof, Mmr};
+use strata_ol_bridge_types::DepositDescriptor;
 use strata_ol_chain_types_new::*;
 use strata_ol_params::OLParams;
 use strata_ol_state_support_types::MemoryStateBaseLayer;
@@ -894,4 +897,40 @@ pub fn create_unchecked_snark_update(
     );
 
     OLTransaction::new(data, tx_proofs)
+}
+
+/// The inbox message a GAM block delivers and a snark update consumes in tests.
+pub fn snark_inbox_msg() -> MessageEntry {
+    MessageEntry::new(
+        crate::SEQUENCER_ACCT_ID,
+        1,
+        MsgPayload::new(BitcoinAmount::from_sat(0), b"inbox msg".to_vec()),
+    )
+}
+
+/// Builds an empty ASM manifest at the given L1 height.
+pub fn empty_manifest(height: u32) -> AsmManifest {
+    AsmManifest::new(
+        height,
+        L1BlockId::from(Buf32::zero()),
+        WtxidsRoot::from(Buf32::zero()),
+        vec![],
+    )
+    .expect("manifest")
+}
+
+/// Builds an ASM manifest carrying a deposit log targeting `target_serial`.
+pub fn deposit_manifest(height: u32, target_serial: AccountSerial) -> AsmManifest {
+    let dest = SubjectIdBytes::try_new(SubjectId::from([42u8; 32]).inner().to_vec()).unwrap();
+    let descriptor = DepositDescriptor::new(target_serial, dest).unwrap();
+    let log_entry =
+        AsmLogEntry::from_log(&DepositLog::new(descriptor.encode_to_varvec(), 150_000_000))
+            .unwrap();
+    AsmManifest::new(
+        height,
+        test_l1_block_id(1),
+        WtxidsRoot::from(Buf32::zero()),
+        vec![log_entry],
+    )
+    .unwrap()
 }
