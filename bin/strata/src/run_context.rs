@@ -8,7 +8,7 @@ use strata_asm_worker::AsmWorkerHandle;
 use strata_btcio::{broadcaster::L1BroadcastHandle, writer::EnvelopeHandle};
 use strata_chain_worker_new::ChainWorkerHandle;
 use strata_config::Config;
-use strata_consensus_logic::FcmServiceHandle;
+use strata_consensus_logic::{FcmServiceHandle, checkpoint_sync::CssServiceHandle};
 use strata_csm_worker::CsmWorkerStatus;
 use strata_node_context::{CommonContext, NodeContext};
 #[cfg(feature = "sequencer")]
@@ -75,9 +75,16 @@ impl RunContext {
     }
 
     /// Returns the fork choice manager handle.
+    ///
+    /// Only called on the sequencer RPC path, where the node always runs FCM.
     #[cfg(feature = "sequencer")]
     pub(crate) fn fcm_handle(&self) -> &Arc<FcmServiceHandle> {
-        &self.service_handles.fcm_handle
+        match &self.service_handles.sync_handle {
+            SyncServiceHandle::Fcm(handle) => handle,
+            SyncServiceHandle::Css(_) => {
+                panic!("fcm_handle requested on a non-sequencer (checkpoint sync) node")
+            }
+        }
     }
 
     /// Returns the executor.
@@ -153,6 +160,18 @@ impl SequencerServiceHandles {
     }
 }
 
+/// Handle for whichever OL sync service the node runs.
+///
+/// A node runs exactly one: the fork-choice manager when it is a sequencer,
+/// the checkpoint sync service otherwise.
+pub(crate) enum SyncServiceHandle {
+    /// Fork-choice manager handle (sequencer nodes).
+    Fcm(Arc<FcmServiceHandle>),
+    /// Checkpoint sync service handle (non-sequencer nodes).
+    #[expect(dead_code, reason = "held to keep the service alive; not yet read")]
+    Css(Arc<CssServiceHandle>),
+}
+
 /// Handles for all services.
 #[expect(unused, reason = "will be used later")]
 pub(crate) struct ServiceHandles {
@@ -171,8 +190,8 @@ pub(crate) struct ServiceHandles {
     /// Handle for the checkpoint worker.
     checkpoint_handle: Arc<OLCheckpointWorkerHandle>,
 
-    /// Handle for the FCM service.
-    fcm_handle: Arc<FcmServiceHandle>,
+    /// Handle for the OL sync service (FCM or checkpoint sync).
+    sync_handle: SyncServiceHandle,
 
     /// Handles for sequencer-specific services ([`None`] when not running as sequencer).
     #[cfg(feature = "sequencer")]
@@ -187,7 +206,7 @@ impl ServiceHandles {
         mempool_handle: Arc<MempoolHandle>,
         chain_worker_handle: Arc<ChainWorkerHandle>,
         checkpoint_handle: Arc<OLCheckpointWorkerHandle>,
-        fcm_handle: Arc<FcmServiceHandle>,
+        sync_handle: SyncServiceHandle,
     ) -> ServiceHandlesBuilder {
         ServiceHandlesBuilder {
             asm_handle,
@@ -195,7 +214,7 @@ impl ServiceHandles {
             mempool_handle,
             chain_worker_handle,
             checkpoint_handle,
-            fcm_handle,
+            sync_handle,
             #[cfg(feature = "sequencer")]
             sequencer_handles: None,
         }
@@ -219,8 +238,8 @@ pub(crate) struct ServiceHandlesBuilder {
     /// Handle for the checkpoint worker.
     checkpoint_handle: Arc<OLCheckpointWorkerHandle>,
 
-    /// Handle for the FCM service.
-    fcm_handle: Arc<FcmServiceHandle>,
+    /// Handle for the OL sync service (FCM or checkpoint sync).
+    sync_handle: SyncServiceHandle,
 
     /// Handles for sequencer-specific services ([`None`] when not running as sequencer).
     #[cfg(feature = "sequencer")]
@@ -246,7 +265,7 @@ impl ServiceHandlesBuilder {
             mempool_handle: self.mempool_handle,
             chain_worker_handle: self.chain_worker_handle,
             checkpoint_handle: self.checkpoint_handle,
-            fcm_handle: self.fcm_handle,
+            sync_handle: self.sync_handle,
             #[cfg(feature = "sequencer")]
             sequencer_handles: self.sequencer_handles,
         }
