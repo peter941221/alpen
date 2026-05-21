@@ -155,6 +155,7 @@ class AlpenClientEnv(flexitest.EnvConfig):
             enable_discovery=enable_discovery,
             ol_endpoint=ol_endpoint,
             da_config=da_config,
+            batch_sealing_block_count=batch_sealing_block_count,
             dev_track_latest_epoch=dev_track_latest_epoch,
         )
         sequencer.wait_for_ready(timeout=60)
