@@ -30,6 +30,7 @@ services:
       - strata-data:/app/data
     ports:
       - "8432:8432"
+      - "9615:9615"
     networks:
       - alpen_network
     entrypoint: ["/usr/local/bin/entrypoint.sh"]

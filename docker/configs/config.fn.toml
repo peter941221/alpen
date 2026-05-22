@@ -7,6 +7,10 @@ datadir = "/app/data"
 sync_endpoint = "ws://fnclient675f9eff3a682b8c0ea7423.testnet.alpenlabs.io"
 db_retry_count = 5
 
+[logging]
+metrics_host = "0.0.0.0"
+metrics_port = 9615
+
 [bitcoind]
 rpc_url = "bitcoind:38332"
 rpc_user = "bitcoin"

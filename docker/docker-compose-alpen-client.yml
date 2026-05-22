@@ -78,6 +78,7 @@ services:
       - ./data/strata:/app/data
     ports:
       - "${STRATA_RPC_PORT:-8432}:8432"
+      - "${STRATA_METRICS_PORT:-9615}:9615"
     entrypoint: ["/usr/local/bin/entrypoint.sh"]
     networks:
       - alpen_network

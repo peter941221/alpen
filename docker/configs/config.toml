@@ -10,6 +10,10 @@ db_retry_count = 5
 # sequencer_rpc = "ws://strata-nodes-client-svc:8432"
 sync_endpoint = "ws://strata-client-strata-nodes-refactor-client-svc:8432"
 
+[logging]
+metrics_host = "0.0.0.0"
+metrics_port = 9615
+
 [bitcoind]
 rpc_url = "http://bitcoind:38332"
 rpc_user = "rpcuser"

@@ -19,6 +19,10 @@ datadir = "/app/data"
 db_retry_count = 5
 is_sequencer = true
 
+[logging]
+metrics_host = "0.0.0.0"
+metrics_port = 9615
+
 [bitcoind]
 rpc_url = "http://bitcoind:18443/wallet/default"
 rpc_user = "rpcuser"
