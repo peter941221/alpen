@@ -30,7 +30,7 @@ use alpen_ee_exec_chain::init_exec_chain_state_from_storage;
 use alpen_ee_genesis::ensure_finalized_exec_chain_genesis;
 use alpen_ee_genesis::{ensure_batch_genesis, ensure_genesis_ee_account_state};
 use alpen_ee_ol_tracker::init_ol_tracker_state;
-use alpen_ee_rpc_server::{AlpenEeRpcServer, EeRpcServer};
+use alpen_ee_rpc_server::{AlpenEeProofPipelineRpcServer, AlpenEeRpcServer, EeRpcServer};
 #[cfg(feature = "sequencer")]
 use alpen_ee_sequencer::{
     block_builder_task, build_ol_chain_tracker, init_ol_chain_tracker_state, BlockBuilderConfig,
@@ -391,10 +391,29 @@ fn main() {
 
             node_builder = node_builder.extend_rpc_modules({
                 let consensus_watcher = consensus_watcher.clone();
+                let batch_storage = storage.clone();
+                let enable_proof_pipeline_rpc = ext.ee_proof_pipeline_rpc;
                 move |ctx| {
                     let provider = ctx.provider().clone();
-                    let ee_rpc_server = EeRpcServer::new(provider, consensus_watcher);
-                    ctx.modules.merge_configured(ee_rpc_server.into_rpc())?;
+                    let ee_rpc_server = EeRpcServer::new(
+                        provider.clone(),
+                        consensus_watcher.clone(),
+                        batch_storage.clone(),
+                    );
+                    ctx.modules
+                        .merge_configured(AlpenEeRpcServer::into_rpc(ee_rpc_server))?;
+
+                    if enable_proof_pipeline_rpc {
+                        let ee_rpc_server = EeRpcServer::new(
+                            provider,
+                            consensus_watcher.clone(),
+                            batch_storage.clone(),
+                        );
+                        ctx.modules
+                            .merge_configured(AlpenEeProofPipelineRpcServer::into_rpc(
+                                ee_rpc_server,
+                            ))?;
+                    }
                     Ok(())
                 }
             });
@@ -1148,6 +1167,12 @@ pub struct AdditionalConfig {
     /// tests that don't need OL interaction.
     #[arg(long, default_value_t = false)]
     pub dummy_ol_client: bool,
+
+    /// Expose test-only EE proof pipeline status over the `alpen` RPC namespace.
+    ///
+    /// This is intended for functional tests and local diagnostics.
+    #[arg(long, default_value_t = false)]
+    pub ee_proof_pipeline_rpc: bool,
 
     #[arg(long, required = false)]
     pub db_retry_count: Option<u16>,
