@@ -67,7 +67,6 @@ class AlpenClientFactory(flexitest.Factory):
         da_config: EeDaConfig | None = None,
         batch_sealing_block_count: int = 100,
         dev_track_latest_epoch: bool = False,
-        enable_proof_pipeline_rpc: bool = False,
         **kwargs,
     ) -> AlpenClientService:
         """
@@ -129,8 +128,6 @@ class AlpenClientFactory(flexitest.Factory):
             # the EE block builder consume inbox messages without
             # waiting on the L1 checkpoint round-trip.
             cmd.append("--dev-track-latest-epoch")
-        if enable_proof_pipeline_rpc:
-            cmd.append("--ee-proof-pipeline-rpc")
         # fmt: on
 
         # Discovery mode configuration:
@@ -210,7 +207,6 @@ class AlpenClientFactory(flexitest.Factory):
         datadir_override: str | None = None,
         sequencer_http: str | None = None,
         ol_endpoint: str | None = None,
-        enable_proof_pipeline_rpc: bool = False,
         **kwargs,
     ) -> AlpenClientService:
         """
@@ -279,8 +275,6 @@ class AlpenClientFactory(flexitest.Factory):
         # Add sequencer HTTP URL for transaction forwarding
         if sequencer_http:
             cmd.extend(["--sequencer-http", sequencer_http])
-        if enable_proof_pipeline_rpc:
-            cmd.append("--ee-proof-pipeline-rpc")
 
         # Discovery mode configuration:
         # - enable_discovery=True: Use discv5 only (disable discv4)
